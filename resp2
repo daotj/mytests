@@ -1,0 +1,330 @@
+void __usercall cavalry::loadThirdPartyJsFile(__int64 *a1@<X0>, __int64 a2@<X8>)
+{
+  int v4; // w9
+  __int64 *v5; // x22
+  unsigned __int64 v6; // x23
+  _OWORD *v7; // x0
+  void **v8; // x8
+  char *v9; // x9
+  __int128 *v10; // x11
+  _OWORD *v11; // x12
+  unsigned __int64 v12; // x13
+  __int128 v13; // q0
+  __int128 v14; // q1
+  __int128 v15; // q2
+  __int128 v16; // q3
+  char v17; // t1
+  spdlog *v18; // x0
+  spdlog *v19; // x0
+  char v20; // w23
+  const void *v21; // x20
+  void *v22; // x22
+  void *v23; // x0
+  size_t v24; // x21
+  int v25; // w0
+  int v26; // w6
+  int v27; // w7
+  int v28; // w0
+  int v29; // w6
+  int v30; // w7
+  const void *v31; // x21
+  void *v32; // x24
+  unsigned __int128 *v33; // x0
+  size_t v34; // x22
+  unsigned __int128 v35; // kr00_16
+  _BOOL4 v36; // w21
+  const char *v37; // x21
+  size_t v38; // x0
+  size_t v39; // x22
+  void **p_dst; // x23
+  size_t v41; // x24
+  size_t v42; // x0
+  size_t v43; // x21
+  void *v44; // x22
+  size_t v45; // x23
+  const void *v46; // x21
+  void *v47; // x23
+  void *v48; // x0
+  size_t v49; // x22
+  spdlog *v50; // x0
+  char v51; // w8
+  void **v52; // x20
+  char *v53; // x21
+  char *v54; // x15
+  void **v55; // x13
+  int v56; // w0
+  int v57; // w6
+  int v58; // w7
+  char *v59; // x12
+  signed __int64 v60; // x10
+  char *v61; // x11
+  char *v62; // x12
+  _BYTE *v63; // x8
+  char *v64; // x22
+  void *v65[2]; // [xsp+0h] [xbp-140h] BYREF
+  __int64 v66; // [xsp+10h] [xbp-130h]
+  __int64 v67; // [xsp+18h] [xbp-128h]
+  void *v68; // [xsp+20h] [xbp-120h] BYREF
+  __int64 v69; // [xsp+28h] [xbp-118h]
+  unsigned __int64 v70; // [xsp+30h] [xbp-110h]
+  void **__dst; // [xsp+38h] [xbp-108h] BYREF
+  __int64 v72; // [xsp+40h] [xbp-100h]
+  unsigned __int64 v73; // [xsp+48h] [xbp-F8h]
+  void *v74[2]; // [xsp+50h] [xbp-F0h] BYREF
+  void *v75; // [xsp+60h] [xbp-E0h]
+  __int64 v76; // [xsp+68h] [xbp-D8h]
+  void *__p[2]; // [xsp+70h] [xbp-D0h] BYREF
+  void *v78; // [xsp+80h] [xbp-C0h]
+  void *v79; // [xsp+88h] [xbp-B8h]
+  void *v80[2]; // [xsp+90h] [xbp-B0h] BYREF
+  void *v81; // [xsp+A0h] [xbp-A0h]
+  int v82; // [xsp+A8h] [xbp-98h] BYREF
+  const std::error_category *v83; // [xsp+B0h] [xbp-90h]
+  char __s[24]; // [xsp+B8h] [xbp-88h] BYREF
+  unsigned __int128 v85; // [xsp+D0h] [xbp-70h] BYREF
+  _QWORD v86[3]; // [xsp+E0h] [xbp-60h] BYREF
+
+  v82 = 0;
+  v83 = std::system_category();
+  v4 = *((char *)a1 + 23);
+  if ( v4 >= 0 )
+    v5 = a1;
+  else
+    v5 = (__int64 *)*a1;
+  if ( v4 >= 0 )
+    v6 = *((unsigned __int8 *)a1 + 23);
+  else
+    v6 = a1[1];
+  if ( v6 > 0x7FFFFFFFFFFFFFEFLL )
+    std::string::__throw_length_error[abi:v160006](a1: v80);
+  if ( v6 >= 0x17 )
+  {
+    v7 = operator new(__sz: (v6 | 0xF) + 1);
+    v80[1] = (void *)v6;
+    v81 = (void *)(((v6 | 0xF) + 1) | 0x8000000000000000LL);
+    v80[0] = v7;
+  }
+  else
+  {
+    HIBYTE(v81) = v6;
+    v7 = v80;
+    if ( v6 == 0 )
+    {
+      v8 = v80;
+      goto LABEL_20;
+    }
+  }
+  if ( v6 < 0x40 || (unsigned __int64)((char *)v7 - (char *)v5) < 0x40 )
+  {
+    v8 = (void **)v7;
+    v9 = (char *)v5;
+    do
+    {
+LABEL_19:
+      v17 = *v9++;
+      *(_BYTE *)v8 = v17;
+      v8 = (void **)((char *)v8 + 1);
+    }
+    while ( v9 != (char *)v5 + v6 );
+    goto LABEL_20;
+  }
+  v8 = (void **)((char *)v7 + (v6 & 0xFFFFFFFFFFFFFFC0LL));
+  v9 = (char *)v5 + (v6 & 0xFFFFFFFFFFFFFFC0LL);
+  v10 = (__int128 *)(v5 + 4);
+  v11 = v7 + 2;
+  v12 = v6 & 0xFFFFFFFFFFFFFFC0LL;
+  do
+  {
+    v13 = *(v10 - 2);
+    v14 = *(v10 - 1);
+    v15 = *v10;
+    v16 = v10[1];
+    v10 += 4;
+    *(v11 - 2) = v13;
+    *(v11 - 1) = v14;
+    *v11 = v15;
+    v11[1] = v16;
+    v11 += 4;
+    v12 -= 64LL;
+  }
+  while ( v12 != 0 );
+  if ( v6 != (v6 & 0x7FFFFFFFFFFFFFC0LL) )
+    goto LABEL_19;
+LABEL_20:
+  *(_BYTE *)v8 = 0;
+  ghc::filesystem::path::postprocess_path_with_format(a1: v80, a2: 2);
+  v18 = (spdlog *)ghc::filesystem::detail::status_ex(a1: &v85, a2: v80, a3: &v82, a4: 0, a5: 0, a6: 0, a7: 0, a8: 0);
+  if ( (_DWORD)v85 != 0 )
+  {
+    v82 = 0;
+    v18 = (spdlog *)std::system_category();
+    v83 = (const std::error_category *)v18;
+    if ( (unsigned int)v85 > 1 )
+    {
+      v19 = (spdlog *)cavalry::textFromFile(a1: __p, a2: a1);
+      if ( (_BYTE)v79 == 0 )
+      {
+        v28 = spdlog::default_logger_raw(this: v19);
+        v85 = 0u;
+        v86[0] = 0;
+        spdlog::logger::log_<std::string const&>(
+          a1: v28,
+          a2: (int)&v85,
+          a3: 4,
+          a4: (int)"Failed to read JavaScript file: {}",
+          a5: 34,
+          a6: (int)a1,
+          a7: v29,
+          a8: v30,
+          a9: (__int64)v65[0],
+          a10: (__int64)v65[1],
+          a11: v66,
+          a12: v67,
+          a13: (__int64)v68,
+          a14: v69,
+          a15: v70,
+          a16: SWORD2(v70),
+          a17: SBYTE6(v70),
+          a18: SHIBYTE(v70),
+          a19: (__int64)__dst,
+          a20: v72,
+          a21: v73,
+          a22: (__int64)v74[0],
+          a23: (__int64)v74[1],
+          a24: (__int64)v75,
+          a25: v76,
+          a26: (__int64)__p[0],
+          a27: (__int64)__p[1],
+          a28: v78,
+          a29: v79,
+          a30: (__int64)v80[0],
+          a31: (__int64)v80[1],
+          a32: (__int64)v81);
+        goto LABEL_102;
+      }
+      ghc::filesystem::path::extension(a1: (__int64 *)v74, this: (ghc::filesystem::path *)v80);
+      v20 = HIBYTE(v75);
+      if ( SHIBYTE(v75) < 0 )
+      {
+        v31 = v74[0];
+        v32 = v74[1];
+        if ( v74[1] > (char *)&dword_14 + 2 )
+        {
+          if ( v74[1] > (void *)0x7FFFFFFFFFFFFFEFLL )
+            std::string::__throw_length_error[abi:v160006](a1: &v85);
+          v34 = ((unsigned __int64)v74[1] | 0xF) + 1;
+          v33 = (unsigned __int128 *)operator new(__sz: v34);
+          *((_QWORD *)&v85 + 1) = v32;
+          v86[0] = v34 | 0x8000000000000000LL;
+          *(_QWORD *)&v85 = v33;
+        }
+        else
+        {
+          HIBYTE(v86[0]) = v74[1];
+          v33 = &v85;
+        }
+        memmove(__dst: v33, __src: v31, __len: (size_t)v32 + 1);
+      }
+      else
+      {
+        v85 = *(_OWORD *)v74;
+        v86[0] = v75;
+      }
+      v35 = __PAIR128__(HIBYTE(v86[0]), &v85);
+      if ( v86[0] < 0 )
+        v35 = v85;
+      if ( *((_QWORD *)&v35 + 1) == 4 )
+      {
+        v36 = *(_DWORD *)v35 == 1668508206;
+        if ( (SHIBYTE(v86[0]) & 0x80000000) == 0 )
+          goto LABEL_51;
+      }
+      else
+      {
+        v36 = false;
+        if ( (SHIBYTE(v86[0]) & 0x80000000) == 0 )
+          goto LABEL_51;
+      }
+      operator delete(__p: (void *)v85);
+      v20 = HIBYTE(v75);
+LABEL_51:
+      if ( v20 < 0 )
+      {
+        operator delete(__p: v74[0]);
+        if ( !v36 )
+          goto LABEL_124;
+      }
+      else if ( !v36 )
+      {
+        goto LABEL_124;
+      }
+      *(_QWORD *)&v85 = 0x2C22217000000014LL;
+      *((_QWORD *)&v85 + 1) = 0x262D202725237724LL;
+      strcpy((char *)v86, "&v&,\"# ,'%v#!-wv-\"pu");
+      v37 = (const char *)andrivet::ADVobfuscator::MetaString<0,(char)20,andrivet::ADVobfuscator::Indexes<0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31>>::decrypt(a1: &v85);
+      v38 = strlen(__s: v37);
+      if ( v38 > 0x7FFFFFFFFFFFFFEFLL )
+        std::string::__throw_length_error[abi:v160006](a1: &__dst);
+      v39 = v38;
+      if ( v38 > 0x16 )
+      {
+        v41 = (v38 | 0xF) + 1;
+        p_dst = (void **)operator new(__sz: v41);
+        v72 = v39;
+        v73 = v41 | 0x8000000000000000LL;
+        __dst = p_dst;
+      }
+      else
+      {
+        HIBYTE(v73) = v38;
+        p_dst = (void **)&__dst;
+      }
+      memmove(__dst: p_dst, __src: v37, __len: v39);
+      *((_BYTE *)p_dst + v39) = 0;
+      strcpy(__s, "3e7bdd5d20df3216");
+      v42 = strlen(__s);
+      if ( v42 > 0x7FFFFFFFFFFFFFEFLL )
+        std::string::__throw_length_error[abi:v160006](a1: &v68);
+      v43 = v42;
+      if ( v42 > 0x16 )
+      {
+        v45 = (v42 | 0xF) + 1;
+        v44 = operator new(__sz: v45);
+        v69 = v43;
+        v70 = v45 | 0x8000000000000000LL;
+        v68 = v44;
+      }
+      else
+      {
+        HIBYTE(v70) = v42;
+        v44 = &v68;
+      }
+      memcpy(__dst: v44, __src: __s, __n: v43);
+      *((_BYTE *)v44 + v43) = 0;
+      if ( SHIBYTE(v78) < 0 )
+      {
+        v46 = __p[0];
+        v47 = __p[1];
+        if ( __p[1] > (char *)&dword_14 + 2 )
+        {
+          if ( __p[1] > (void *)0x7FFFFFFFFFFFFFEFLL )
+            std::string::__throw_length_error[abi:v160006](a1: v65);
+          v49 = ((unsigned __int64)__p[1] | 0xF) + 1;
+          v48 = operator new(__sz: v49);
+          v65[1] = v47;
+          v66 = v49 | 0x8000000000000000LL;
+          v65[0] = v48;
+        }
+        else
+        {
+          HIBYTE(v66) = __p[1];
+          v48 = v65;
+        }
+        memmove(__dst: v48, __src: v46, __len: (size_t)v47 + 1);
+      }
+      else
+      {
+        *(_OWORD *)v65 = *(_OWORD *)__p;
+        v66 = (__int64)v78;
+      }
+      v50 = (spdlog *)cavalry::crypto::aes_decrypt64(a1: v74, a2: &__dst, a3: &v68, a4: v65);
