@@ -1,0 +1,1190 @@
+/*
+* Decompiled with Jsxer
+* Version: 1.7.4
+* JSXBIN 2.0
+*/
+
+var an_MagicMorphingCEP = (function () {
+function result(ok, message) {
+var escaped = String((message) || ("")).replace(/\\/g, "\\\\").replace(/"/g, "\\\"").replace(/\r/g, "\\r").replace(/\n/g, "\\n").replace(/\t/g, "\\t");
+return "{\"ok\":" + ok ? "true" : "false" + ",\"undoCount\":" + undoHistory.length + ",\"error\":\"" + escaped + "\"}";
+}
+function showHelpLicense() {
+var win = new Window("dialog", "MagicMorphing - Help / License");
+win.orientation = "column";
+win.alignChildren = ["fill", "top"];
+win.spacing = 10;
+win.margins = 14;
+var help = win.add("statictext", undefined, mm_settings.helpText, {multiline: true});
+help.preferredSize = [420, 360];
+var closeBtn = win.add("button", undefined, "Close", {name: "ok"});
+closeBtn.alignment = ["right", "top"];
+win.show();
+}
+function buildUI(windowObj) {
+var panel = windowObj instanceof Panel ? windowObj : new Window("palette", "MagicMorphing", undefined, {resizeable: true});
+panel.preferredSize = [240, 230];
+panel.orientation = "column";
+panel.alignChildren = ["fill", "top"];
+panel.spacing = 8;
+panel.margins = 10;
+var autoPanel = panel.add("panel", undefined, "");
+autoPanel.orientation = "column";
+autoPanel.alignChildren = ["fill", "top"];
+autoPanel.spacing = 8;
+autoPanel.margins = 12;
+var btnAutoFix = autoPanel.add("button", undefined, "MAGIC");
+btnAutoFix.preferredSize = [-1, 36];
+btnAutoFix.helpTip = "Automatically matches contour positions and turning features, including complex and equal-count paths. Preserves original outlines and timing.";
+var chkComplexPath = autoPanel.add("checkbox", undefined, "Complex Path");
+chkComplexPath.value = false;
+chkComplexPath.helpTip = "Optional denser matching for complex contours. Adds more points; leave off to keep point counts low.";
+undoButton = autoPanel.add("button", undefined, "Undo");
+undoButton.preferredSize = [-1, 28];
+undoButton.helpTip = "Restore path values from before the last MAGIC run in this panel session.";
+undoButton.enabled = undoHistory.length > 0;
+undoButton.onClick = function () {
+undoMagicFix();
+};
+var btnHelp = autoPanel.add("button", undefined, "Help / License");
+btnHelp.preferredSize = [-1, 28];
+btnHelp.onClick = function () {
+showHelpLicense();
+};
+btnAutoFix.isHovered = false;
+var forceUIUpdate = function () {
+try {
+if (panel instanceof Window) { 
+panel.update();
+}
+else {
+if (panel.window) { 
+panel.window.update();
+}
+}
+} catch (e) {
+}
+};
+var setCursor = function (cursorType) {
+try {
+if (panel.window) { 
+panel.window.cursor = cursorType;
+}
+else {
+if (panel instanceof Window) { 
+panel.cursor = cursorType;
+}
+}
+} catch (e) {
+}
+};
+btnAutoFix.addEventListener("mouseover", function () {
+if (!btnAutoFix.isHovered) { 
+btnAutoFix.isHovered = true;
+setCursor("hand");
+forceUIUpdate();
+}
+});
+btnAutoFix.addEventListener("mouseout", function () {
+if (btnAutoFix.isHovered) { 
+btnAutoFix.isHovered = false;
+setCursor("default");
+forceUIUpdate();
+}
+});
+btnAutoFix.onDraw = function () {
+var g = this.graphics;
+var w = this.size[0];
+var h = this.size[1];
+var r = 6;
+var blueColor = [0, 0.47, 0.83];
+var whiteColor = [1, 1, 1];
+var isHover = btnAutoFix.isHovered;
+var bgColor = [0.15, 0.15, 0.15];
+try {
+if (((btnAutoFix.parent) && (btnAutoFix.parent.graphics)) && (btnAutoFix.parent.graphics.backgroundColor)) { 
+bgColor = btnAutoFix.parent.graphics.backgroundColor.color;
+}
+else {
+if (((btnAutoFix.window) && (btnAutoFix.window.graphics)) && (btnAutoFix.window.graphics.backgroundColor)) { 
+bgColor = btnAutoFix.window.graphics.backgroundColor.color;
+}
+}
+} catch (e) {
+}
+g.newPath();
+g.rectPath(0, 0, w, h);
+g.fillPath(g.newBrush(g.BrushType.SOLID_COLOR, bgColor));
+g.newPath();
+var steps = 8;
+var lw = 2;
+var ix = isHover ? lw / 2 : 0;
+var iy = isHover ? lw / 2 : 0;
+var iw = isHover ? w - lw : w;
+var ih = isHover ? h - lw : h;
+var ir = r;
+g.moveTo(ix + ir, iy);
+g.lineTo((ix + iw) - ir, iy);
+for (var i = 1; i <= steps; i += 1) { 
+var a = (Math.PI * 1.5) + ((i / steps) * (Math.PI / 2));
+g.lineTo(((ix + iw) - ir) + (ir * Math.cos(a)), iy + ir + (ir * Math.sin(a)));}
+g.lineTo(ix + iw, (iy + ih) - ir);
+for (var i = 1; i <= steps; i += 1) { 
+var a = 0 + ((i / steps) * (Math.PI / 2));
+g.lineTo(((ix + iw) - ir) + (ir * Math.cos(a)), ((iy + ih) - ir) + (ir * Math.sin(a)));}
+g.lineTo(ix + ir, iy + ih);
+for (var i = 1; i <= steps; i += 1) { 
+var a = (Math.PI / 2) + ((i / steps) * (Math.PI / 2));
+g.lineTo(ix + ir + (ir * Math.cos(a)), ((iy + ih) - ir) + (ir * Math.sin(a)));}
+g.lineTo(ix, iy + ir);
+for (var i = 1; i <= steps; i += 1) { 
+var a = Math.PI + ((i / steps) * (Math.PI / 2));
+g.lineTo(ix + ir + (ir * Math.cos(a)), iy + ir + (ir * Math.sin(a)));}
+if (isHover) { 
+var bluePen = g.newPen(g.PenType.SOLID_COLOR, blueColor, lw);
+g.strokePath(bluePen);
+}
+else {
+g.fillPath(g.newBrush(g.BrushType.SOLID_COLOR, blueColor));
+}
+var textStr = "MAGIC";
+var textPen = g.newPen(g.PenType.SOLID_COLOR, isHover ? blueColor : whiteColor, 1);
+var customFont = ScriptUI.newFont(g.font.family, "BOLD", 15);
+var textExtents = g.measureString(textStr, customFont);
+var x = Math.round((w - textExtents[0]) / 2);
+var y = Math.round((h - textExtents[1]) / 2);
+g.drawString(textStr, textPen, x, y, customFont);
+};
+btnAutoFix.onClick = function () {
+processMagicFix(chkComplexPath.value);
+};
+panel.onResizing = panel.onResize = function () {
+this.layout.resize();
+};
+panel.layout.layout(true);
+return panel;
+}
+function processMagicFix(complexPath) {
+var comp = app.project.activeItem;
+if ((!comp) || (!(comp instanceof CompItem))) { 
+alert("Please select an active composition.");
+return;
+}
+var props = comp.selectedProperties;
+var jobs = [];
+var errors = [];
+var completed = [];
+if (trialMode) { 
+var trialPaths = 0;
+for (var tp = 0; tp < props.length; tp += 1) { 
+if ((props[tp].propertyValueType !== PropertyValueType.SHAPE) || (props[tp].selectedKeys.length < 2)) { 
+continue ;
+}
+trialPaths++;
+if ((trialPaths > 1) || (props[tp].selectedKeys.length > 2)) { 
+throw new Error("The trial supports 1 path and 2 selected keyframes per MAGIC run. Activate in Help / License for unrestricted use.");
+}}
+}
+for (var i = 0; i < props.length; i += 1) { 
+var prop = props[i];
+if (prop.propertyValueType !== PropertyValueType.SHAPE) { 
+continue ;
+}
+var keys = prop.selectedKeys.slice();
+if (keys.length < 2) { 
+continue ;
+}
+keys.sort(function (a, b) {
+return a - b;
+});
+try {
+var originals = [];
+var times = [];
+for (var k = 0; k < keys.length; k += 1) { 
+originals.push(prop.keyValue(keys[k]));
+times.push(prop.keyTime(keys[k]));}
+var shapes = prepareMorph(originals, complexPath === true);
+var snapshots = [];
+for (var k = 0; k < originals.length; k += 1) { 
+snapshots.push(cloneShape(originals[k]));}
+jobs.push({keys: keys, name: prop.name, originals: snapshots, prop: prop, shapes: shapes, times: times});
+} catch (e) {errors.push(prop.name + ": " + e.toString());
+}}
+if (jobs.length > 0) { 
+app.beginUndoGroup("MagicMorphing: Smooth paths");
+try {
+for (var j = 0; j < jobs.length; j += 1) { 
+var job = jobs[j];
+var written = -1;
+try {
+for (var n = 0; n < job.keys.length; n += 1) { 
+written = n;
+job.prop.setValueAtKey(job.keys[n], job.shapes[n]);}
+var after = [];
+for (var n = 0; n < job.keys.length; n += 1) { 
+after.push(cloneShape(job.prop.keyValue(job.keys[n])));}
+completed.push({after: after, name: job.name, originals: job.originals, prop: job.prop, times: job.times});
+} catch (writeError) {var restoreFailed = false;
+for (var r = 0; r <= written; r += 1) { 
+try {
+job.prop.setValueAtKey(job.keys[r], job.originals[r]);
+} catch (restoreError) {restoreFailed = true;
+}}
+errors.push(job.prop.name + ": " + writeError.toString() + restoreFailed ? " Use After Effects Edit > Undo to restore this path." : " Original values restored.");
+}}
+} finally {
+app.endUndoGroup();
+}
+}
+if (completed.length) { 
+undoHistory.push({jobs: completed, project: app.project});
+if (undoHistory.length > 20) { 
+undoHistory.shift();
+}
+}
+refreshUndoButton();
+if (errors.length) { 
+alert("MagicMorphing could not process some paths:\n\n" + errors.join("\n"));
+}
+else {
+if (!jobs.length) { 
+alert("Please select 2 or more keyframes on a Path property.");
+}
+}
+}
+function refreshUndoButton() {
+if (undoButton) { 
+undoButton.enabled = undoHistory.length > 0;
+}
+}
+function samePathValue(a, b) {
+if ((a.closed !== b.closed) || (a.vertices.length !== b.vertices.length)) { 
+return false;
+}
+var fields = ["vertices", "inTangents", "outTangents"];
+for (var f = 0; f < fields.length; f += 1) { 
+var x = a[fields[f]];
+var y = b[fields[f]];
+if (x.length !== y.length) { 
+return false;
+}
+for (var i = 0; i < x.length; i += 1) { 
+if ((x[i][0] !== y[i][0]) || (x[i][1] !== y[i][1])) { 
+return false;
+}}}
+return !((a.featherSegLocs) && (a.featherSegLocs.length));
+}
+function undoMagicFix() {
+if (!undoHistory.length) { 
+refreshUndoButton();
+return;
+}
+var entry = undoHistory[undoHistory.length - 1];
+var changes = [];
+try {
+if (entry.project !== app.project) { 
+throw new Error("The original project is no longer open.");
+}
+for (var j = 0; j < entry.jobs.length; j += 1) { 
+var job = entry.jobs[j];
+var prop = job.prop;
+if (!prop.numKeys) { 
+throw new Error(job.name + ": the original keyframes no longer exist.");
+}
+for (var k = 0; k < job.times.length; k += 1) { 
+var index = prop.nearestKeyIndex(job.times[k]);
+if (Math.abs(prop.keyTime(index) - job.times[k]) > 1e-07) { 
+throw new Error(job.name + ": an original keyframe was moved or deleted.");
+}
+var current = prop.keyValue(index);
+if (samePathValue(current, job.originals[k])) { 
+continue ;
+}
+if (!samePathValue(current, job.after[k])) { 
+throw new Error(job.name + ": a path was edited after MAGIC. Use After Effects Undo to step back through those edits first.");
+}
+changes.push({before: cloneShape(current), key: index, original: job.originals[k], prop: prop});}}
+} catch (checkError) {alert("MagicMorphing could not restore the saved paths:\n\n" + checkError.toString());
+return;
+}
+if (changes.length) { 
+app.beginUndoGroup("MagicMorphing: Restore original paths");
+var written = -1;
+try {
+for (var i = 0; i < changes.length; i += 1) { 
+written = i;
+changes[i].prop.setValueAtKey(changes[i].key, changes[i].original);}
+} catch (restoreError) {var rollbackFailed = false;
+for (var r = 0; r <= written; r += 1) { 
+try {
+changes[r].prop.setValueAtKey(changes[r].key, changes[r].before);
+} catch (rollbackError) {rollbackFailed = true;
+}}
+alert("MagicMorphing could not finish Undo:\n\n" + restoreError.toString() + rollbackFailed ? "\nUse After Effects Edit > Undo to recover." : "\nThe current paths were kept. You can retry Undo.");
+return;
+} finally {
+app.endUndoGroup();
+}
+}
+undoHistory.pop();
+refreshUndoButton();
+}
+function validateShapes(shapes) {
+if (shapes.length < 2) { 
+throw new Error("Select at least two keyframes.");
+}
+for (var k = 0; k < shapes.length; k += 1) { 
+var s = shapes[k];
+var count = s.vertices.length;
+if (!count) { 
+throw new Error("Empty paths cannot be matched.");
+}
+if (s.closed !== shapes[0].closed) { 
+throw new Error("Selected paths must all be open or all be closed.");
+}
+if ((s.featherSegLocs) && (s.featherSegLocs.length)) { 
+throw new Error("Feathered masks are not supported; their feather locations must be preserved.");
+}
+if ((s.inTangents.length !== count) || (s.outTangents.length !== count)) { 
+throw new Error("The path has incomplete tangent data.");
+}
+var arrays = [s.vertices, s.inTangents, s.outTangents];
+for (var a = 0; a < arrays.length; a += 1) { 
+for (var i = 0; i < count; i += 1) { 
+for (var d = 0; d < 2; d += 1) { 
+if ((typeof arrays[a][i][d] !== "number") || (!isFinite(arrays[a][i][d]))) { 
+throw new Error("The path contains invalid coordinates.");
+}}}}}
+}
+function prepareMorph(originals, complexPath) {
+validateShapes(originals);
+var originalLimit = getMaxVertexCount(originals);
+var shapes = [simplifyExactSplits(originals[0])];
+for (var k = 1; k < originals.length; k += 1) { 
+var next = matchPathDirection(shapes[k - 1], simplifyExactSplits(originals[k]));
+if (next.closed) { 
+next = alignContourStart(shapes[k - 1], next);
+}
+shapes.push(next);}
+var budget = getMaxVertexCount(shapes);
+var data = [];
+var regular = true;
+for (var k = 0; k < shapes.length; k += 1) { 
+var lut = getPathLUT(shapes[k]);
+data.push(lut);
+if ((!lut.segments.length) || (lut.totalDist === 0)) { 
+regular = false;
+}
+for (var j = 0; j < lut.segments.length; j += 1) { 
+if (lut.segments[j].length === 0) { 
+regular = false;
+}}}
+var finalShapes = [];
+if (regular) { 
+finalShapes = complexPath === true ? matchContourFeatures(shapes, data) : matchBudgetedContours(shapes, data, budget);
+}
+else {
+var target = budget;
+for (var k = 0; k < shapes.length; k += 1) { 
+finalShapes.push(subdividePathToVertexCount(shapes[k], target));}
+for (var k = 1; k < finalShapes.length; k += 1) { 
+finalShapes[k] = shiftToAlign(finalShapes[k - 1], finalShapes[k]);}
+}
+validateShapes(finalShapes);
+if (!allShapesHaveSameVertexCount(finalShapes)) { 
+throw new Error("Could not build a shared path structure.");
+}
+if ((complexPath !== true) && (finalShapes[0].vertices.length > originalLimit)) { 
+throw new Error("Point budget exceeded.");
+}
+return finalShapes;
+}
+function matchBudgetedContours(shapes, data, budget) {
+var referenceIndex = 0;
+for (var k = 1; k < shapes.length; k += 1) { 
+if (shapes[k].vertices.length > shapes[referenceIndex].vertices.length) { 
+referenceIndex = k;
+}}
+var reference = subdividePathToVertexCount(shapes[referenceIndex], budget);
+var referenceData = getPathLUT(reference);
+var result = [];
+var count = Math.min(128, Math.max(48, budget * 4));
+var referenceFeatures = contourFeatures(referenceData, count);
+for (var k = 0; k < shapes.length; k += 1) { 
+if (k === referenceIndex) { 
+result.push(reference);
+continue ;
+}
+if (shapes[k].vertices.length === budget) { 
+result.push(cloneShape(shapes[k]));
+continue ;
+}
+var map = matchFeatureMap(referenceFeatures, contourFeatures(data[k], count), count);
+var targets = referenceData.vP.slice();
+var anchors = data[k].vP.slice();
+if (reference.closed) { 
+targets.push(1);
+anchors.push(1);
+}
+var desired = [];
+for (var j = 0; j < targets.length; j += 1) { 
+desired.push(mapFraction(map, targets[j], false));}
+var rows = [];
+var previous = [];
+var n = anchors.length;
+var m = desired.length;
+previous[0] = 0;
+for (var i = 1; i < n; i += 1) { 
+var current = [];
+var back = [];
+var best = Infinity;
+var bestIndex = -1;
+var begin = i;
+var end = (m - n) + i;
+for (j = begin; j <= end; j++) { 
+var prior = j - 1;
+if ((previous[prior] !== undefined) && (previous[prior] < best)) { 
+best = previous[prior];
+bestIndex = prior;
+}
+if ((i === (n - 1)) && (j !== (m - 1))) { 
+continue ;
+}
+var delta = anchors[i] - desired[j];
+current[j] = best + (delta * delta);
+back[j] = bestIndex;}
+rows[i] = back;
+previous = current;}
+var slots = new Array(n);
+var slot = m - 1;
+for (i = n - 1; i > 0; i--) { 
+slots[i] = slot;
+slot = rows[i][slot];}
+slots[0] = 0;
+var percentages = [];
+for (var i = 0; i < n - 1; i += 1) { 
+var start = slots[i];
+var endSlot = slots[i + 1];
+for (j = start; j < endSlot; j++) { 
+var fraction = (desired[j] - desired[start]) / (desired[endSlot] - desired[start]);
+percentages.push(j === start ? anchors[i] : anchors[i] + (fraction * (anchors[i + 1] - anchors[i])));}}
+percentages.push(1);
+result.push(resampleAtPercentages(shapes[k], data[k], percentages));}
+for (var k = 1; k < result.length; k += 1) { 
+result[k] = shiftToAlign(result[k - 1], result[k]);}
+return result;
+}
+function simplifyExactSplits(shape) {
+var result = cloneShape(shape);
+var changed = true;
+while ((changed) && (result.vertices.length > result.closed ? 1 : 2)) {
+changed = false;
+var n = result.vertices.length;
+for (var i = 1; i < n + result.closed ? 1 : 0; i += 1) { 
+var join = i % n;
+var before = ((join + n) - 1) % n;
+if ((!result.closed) && (join === (n - 1))) { 
+break ;
+}
+var a = getSegment(result, before);
+var b = getSegment(result, join);
+if (isStraightRun(a, b)) { 
+var lineV = result.vertices;
+var lineIn = result.inTangents;
+var lineOut = result.outTangents;
+lineOut[before] = [0, 0];
+lineIn[(join + 1) % n] = [0, 0];
+lineV.splice(join, 1);
+lineIn.splice(join, 1);
+lineOut.splice(join, 1);
+result.vertices = lineV;
+result.inTangents = lineIn;
+result.outTangents = lineOut;
+changed = true;
+break ;
+}
+var l = distance(a[2], a[3]);
+var r = distance(b[0], b[1]);
+if ((l + r) < 1e-12) { 
+continue ;
+}
+var t = l / (l + r);
+if ((t < 1e-08) || (t > 0.99999999)) { 
+continue ;
+}
+var c = [a[0], lerpPoint(a[0], a[1], 1 / t), lerpPoint(b[3], b[2], 1 / (1 - t)), b[3]];
+var halves = splitCurve(c, t);
+var exact = true;
+var tolerance = 1e-08 + ((distance(c[0], c[1]) + distance(c[1], c[2]) + distance(c[2], c[3])) * 1e-10);
+for (var h = 0; h < 4; h += 1) { 
+if ((distance(a[h], halves[0][h]) > tolerance) || (distance(b[h], halves[1][h]) > tolerance)) { 
+exact = false;
+}}
+if (!exact) { 
+continue ;
+}
+var v = result.vertices;
+var ins = result.inTangents;
+var outs = result.outTangents;
+outs[before] = subtractPoints(c[1], c[0]);
+ins[(join + 1) % n] = subtractPoints(c[2], c[3]);
+v.splice(join, 1);
+ins.splice(join, 1);
+outs.splice(join, 1);
+result.vertices = v;
+result.inTangents = ins;
+result.outTangents = outs;
+changed = true;
+break ;}
+}
+return result;
+}
+function isStraightRun(a, b) {
+var dx = b[3][0] - a[0][0];
+var dy = b[3][1] - a[0][1];
+var length2 = (dx * dx) + (dy * dy);
+if (length2 < 1e-20) { 
+return false;
+}
+var points = [a[0], a[1], a[2], a[3], b[1], b[2], b[3]];
+var previous = -1e-12;
+for (var i = 0; i < points.length; i += 1) { 
+var x = points[i][0] - a[0][0];
+var y = points[i][1] - a[0][1];
+if (Math.abs((x * dy) - (y * dx)) > (Math.sqrt(length2) * 1e-09)) { 
+return false;
+}
+var t = ((x * dx) + (y * dy)) / length2;
+if (((t < (previous - 1e-12)) || (t < -1e-12)) || (t > 1.000000000001)) { 
+return false;
+}
+previous = t;}
+return (sqDist(a[0], a[3]) > 1e-20) && (sqDist(b[0], b[3]) > 1e-20);
+}
+function contourFeatures(data, count) {
+var points = [];
+var result = [];
+for (var i = 0; i <= count; i += 1) { 
+points.push(pointAtArc(data, i / count));}
+var normalized = normalizePoints(points);
+for (var i = 0; i <= count; i += 1) { 
+var p = points[i];
+var prev = pointAtArc(data, (i - 0.6) / count);
+var next = pointAtArc(data, (i + 0.6) / count);
+var incoming = subtractPoints(p, prev);
+var outgoing = subtractPoints(next, p);
+var li = distance(p, prev);
+var lo = distance(next, p);
+if (!li) { 
+incoming = outgoing;
+li = lo;
+}
+if (!lo) { 
+outgoing = incoming;
+lo = li;
+}
+li = (li) || (1);
+lo = (lo) || (1);
+var ix = incoming[0] / li;
+var iy = incoming[1] / li;
+var ox = outgoing[0] / lo;
+var oy = outgoing[1] / lo;
+result.push({p: normalized[i], tangent: [ix + ox, iy + oy], turn: Math.atan2((ix * oy) - (iy * ox), (ix * ox) + (iy * oy))});}
+return result;
+}
+function featureCost(a, b) {
+var turn = (a.turn - b.turn) / Math.PI;
+return sqDist(a.p, b.p) + (0.12 * sqDist(a.tangent, b.tangent)) + (0.65 * turn * turn);
+}
+function matchFeatureMap(a, b, count) {
+var costs = [];
+var back = [];
+for (var i = 0; i <= count; i += 1) { 
+costs[i] = [];
+back[i] = [];
+for (var j = 0; j <= count; j += 1) { 
+costs[i][j] = Infinity;
+back[i][j] = 0;}}
+costs[0][0] = 0;
+for (var i = 1; i <= count; i += 1) { 
+for (j = Math.max(1, i - Math.ceil(count * 0.35)); j <= Math.min(count, i + Math.ceil(count * 0.35)); j++) { 
+var c = featureCost(a[i], b[j]);
+var best = costs[i - 1][j - 1] + c;
+var move = 1;
+if (j >= 2) { 
+var stretchB = costs[i - 1][j - 2] + (1.5 * c) + 0.02;
+if (stretchB < best) { 
+best = stretchB;
+move = 2;
+}
+}
+if (i >= 2) { 
+var stretchA = costs[i - 2][j - 1] + (1.5 * c) + 0.02;
+if (stretchA < best) { 
+best = stretchA;
+move = 3;
+}
+}
+costs[i][j] = best;
+back[i][j] = move;}}
+var map = [];
+var x = count;
+var y = count;
+while ((x > 0) && (y > 0)) {
+map.push([x / count, y / count]);
+var direction = back[x][y];
+x -= direction === 3 ? 2 : 1;
+y -= direction === 2 ? 2 : 1;
+}
+map.push([0, 0]);
+map.reverse();
+return map;
+}
+function mapFraction(map, value, inverse) {
+var x = inverse ? 1 : 0;
+var y = inverse ? 0 : 1;
+if (value <= 0) { 
+return 0;
+}
+if (value >= 1) { 
+return 1;
+}
+var lo = 0;
+var hi = map.length - 1;
+while ((hi - lo) > 1) {
+var mid = Math.floor((lo + hi) / 2);
+if (map[mid][x] <= value) { 
+lo = mid;
+}
+else {
+hi = mid;
+}
+}
+return map[lo][y] + (((map[hi][y] - map[lo][y]) * (value - map[lo][x])) / (map[hi][x] - map[lo][x]));
+}
+function matchContourFeatures(shapes, data) {
+function toShared(p, frame) {
+for (var f = frame; f > 0; f--) { 
+p = mapFraction(maps[f], p, true);}
+return p;
+}
+function fromShared(u, frame) {
+for (var f = 1; f <= frame; f += 1) { 
+u = mapFraction(maps[f], u, false);}
+return u;
+}
+var count = Math.min(128, Math.max(48, getMaxVertexCount(shapes) * 4));
+var maps = [[[0, 0], [1, 1]]];
+var features = [];
+for (var k = 0; k < shapes.length; k += 1) { 
+features.push(contourFeatures(data[k], count));}
+for (var k = 1; k < shapes.length; k += 1) { 
+maps.push(matchFeatureMap(features[k - 1], features[k], count));}
+var entries = [];
+for (var i = 0; i <= 24; i += 1) { 
+entries.push({frame: -1, p: 0, u: i / 24});}
+for (var k = 0; k < shapes.length; k += 1) { 
+for (var i = 0; i < data[k].vP.length; i += 1) { 
+entries.push({frame: k, p: data[k].vP[i], u: toShared(data[k].vP[i], k)});}
+entries.push({frame: k, p: 1, u: 1});
+for (var i = 1; i < maps[k].length - 1; i += 1) { 
+var m = maps[k];
+var slopeA = (m[i][1] - m[i - 1][1]) / (m[i][0] - m[i - 1][0]);
+var slopeB = (m[i + 1][1] - m[i][1]) / (m[i + 1][0] - m[i][0]);
+if (Math.abs(slopeA - slopeB) > 1e-06) { 
+entries.push({frame: -1, p: 0, u: toShared(m[i][1], k)});
+}}}
+entries.sort(function (a, b) {
+return a.u - b.u;
+});
+var groups = [];
+for (var i = 0; i < entries.length; i += 1) { 
+var e = entries[i];
+var group = groups.length ? groups[groups.length - 1] : null;
+var conflict = (((group) && (e.frame >= 0)) && (group.exact[e.frame] !== undefined)) && (group.exact[e.frame] !== e.p);
+if (((!group) || ((e.u - group.u) > 1e-09)) || (conflict)) { 
+group = {exact: {}, u: e.u};
+groups.push(group);
+}
+if (e.frame >= 0) { 
+group.exact[e.frame] = e.p;
+}}
+if (groups.length > 2049) { 
+throw new Error("This selection needs over 2048 matched segments. Process fewer keyframes together.");
+}
+var result = [];
+for (var k = 0; k < shapes.length; k += 1) { 
+var percentages = [];
+for (var i = 0; i < groups.length; i += 1) { 
+var g = groups[i];
+percentages.push(g.exact[k] !== undefined ? g.exact[k] : fromShared(g.u, k));}
+for (var i = 1; i < percentages.length; i += 1) { 
+if (percentages[i] <= percentages[i - 1]) { 
+throw new Error("Some contour details are too close to match reliably.");
+}}
+result.push(resampleAtPercentages(shapes[k], data[k], percentages));}
+return result;
+}
+function getMaxVertexCount(shapes) {
+var count = 0;
+for (var i = 0; i < shapes.length; i += 1) { 
+count = Math.max(count, shapes[i].vertices.length);}
+return count;
+}
+function allShapesHaveSameVertexCount(shapes) {
+for (var i = 1; i < shapes.length; i += 1) { 
+if (shapes[i].vertices.length !== shapes[0].vertices.length) { 
+return false;
+}}
+return true;
+}
+function copyPointArray(points) {
+var result = [];
+for (var i = 0; i < points.length; i += 1) { 
+result.push([points[i][0], points[i][1]]);}
+return result;
+}
+function cloneShape(shape) {
+var result = new Shape();
+result.vertices = copyPointArray(shape.vertices);
+result.inTangents = copyPointArray(shape.inTangents);
+result.outTangents = copyPointArray(shape.outTangents);
+result.closed = shape.closed;
+return result;
+}
+function reorderShape(shape, offset, reverse) {
+var result = new Shape();
+var v = [];
+var ins = [];
+var outs = [];
+var n = shape.vertices.length;
+for (var i = 0; i < n; i += 1) { 
+var j = reverse ? ((offset - i) + n) % n : (offset + i) % n;
+v.push(shape.vertices[j]);
+ins.push(reverse ? shape.outTangents[j] : shape.inTangents[j]);
+outs.push(reverse ? shape.inTangents[j] : shape.outTangents[j]);}
+result.vertices = copyPointArray(v);
+result.inTangents = copyPointArray(ins);
+result.outTangents = copyPointArray(outs);
+result.closed = shape.closed;
+return result;
+}
+function addPoints(a, b) {
+return [a[0] + b[0], a[1] + b[1]];
+}
+function subtractPoints(a, b) {
+return [a[0] - b[0], a[1] - b[1]];
+}
+function lerpPoint(a, b, t) {
+return [a[0] + ((b[0] - a[0]) * t), a[1] + ((b[1] - a[1]) * t)];
+}
+function sqDist(a, b) {
+var x = a[0] - b[0];
+var y = a[1] - b[1];
+return (x * x) + (y * y);
+}
+function distance(a, b) {
+return Math.sqrt(sqDist(a, b));
+}
+function getSegment(shape, i) {
+var j = (i + 1) % shape.vertices.length;
+return [shape.vertices[i], addPoints(shape.vertices[i], shape.outTangents[i]), addPoints(shape.vertices[j], shape.inTangents[j]), shape.vertices[j]];
+}
+function splitCurve(c, t) {
+var a = lerpPoint(c[0], c[1], t);
+var b = lerpPoint(c[1], c[2], t);
+var d = lerpPoint(c[2], c[3], t);
+var e = lerpPoint(a, b, t);
+var f = lerpPoint(b, d, t);
+var p = lerpPoint(e, f, t);
+return [[c[0], a, e, p], [p, f, d, c[3]]];
+}
+function splitShapeSegment(shape, index, t) {
+var result = cloneShape(shape);
+var v = result.vertices;
+var ins = result.inTangents;
+var outs = result.outTangents;
+var next = (index + 1) % v.length;
+var halves = splitCurve(getSegment(shape, index), t);
+var left = halves[0];
+var right = halves[1];
+var p = left[3];
+outs[index] = subtractPoints(left[1], left[0]);
+ins[next] = subtractPoints(right[2], right[3]);
+v.splice(index + 1, 0, p);
+ins.splice(index + 1, 0, subtractPoints(left[2], p));
+outs.splice(index + 1, 0, subtractPoints(right[1], p));
+result.vertices = v;
+result.inTangents = ins;
+result.outTangents = outs;
+return result;
+}
+function getCurveLUT(curve) {
+function visit(c, t0, t1, depth) {
+var poly = distance(c[0], c[1]) + distance(c[1], c[2]) + distance(c[2], c[3]);
+var chord = distance(c[0], c[3]);
+if ((depth >= 12) || ((depth >= 5) && ((poly - chord) <= (tolerance * (t1 - t0))))) { 
+total += ((poly + chord) / 2);
+samples.push({d: total, t: t1});
+}
+else {
+var halves = splitCurve(c, 0.5);
+var tm = (t0 + t1) / 2;
+visit(halves[0], t0, tm, depth + 1);
+visit(halves[1], tm, t1, depth + 1);
+}
+}
+var samples = [{d: 0, t: 0}];
+var total = 0;
+var polygon = distance(curve[0], curve[1]) + distance(curve[1], curve[2]) + distance(curve[2], curve[3]);
+var tolerance = Math.max(1e-06, polygon * 1e-05);
+visit(curve, 0, 1, 0);
+return {curve: curve, length: total, samples: samples};
+}
+function arcParameter(segment, fraction) {
+if (fraction <= 0) { 
+return 0;
+}
+if (fraction >= 1) { 
+return 1;
+}
+if (segment.length === 0) { 
+return fraction;
+}
+var samples = segment.samples;
+var target = fraction * segment.length;
+var lo = 0;
+var hi = samples.length - 1;
+while ((hi - lo) > 1) {
+var mid = Math.floor((lo + hi) / 2);
+if (samples[mid].d < target) { 
+lo = mid;
+}
+else {
+hi = mid;
+}
+}
+var a = samples[lo];
+var b = samples[hi];
+var span = b.d - a.d;
+var localFraction = span > 0 ? (target - a.d) / span : 0;
+var t = a.t + (localFraction * (b.t - a.t));
+var c = segment.curve;
+var localTarget = localFraction * curveArcIntegral(c, a.t, b.t);
+var low = a.t;
+var high = b.t;
+for (var iteration = 0; iteration < 6; iteration += 1) { 
+var error = curveArcIntegral(c, a.t, t) - localTarget;
+if (Math.abs(error) < (1e-10 + (segment.length * 1e-12))) { 
+break ;
+}
+if (error > 0) { 
+high = t;
+}
+else {
+low = t;
+}
+var velocity = getBezierDerivative(c[0], c[1], c[2], c[3], t);
+var speed = Math.sqrt((velocity[0] * velocity[0]) + (velocity[1] * velocity[1]));
+var next = speed > 1e-12 ? t - (error / speed) : (low + high) / 2;
+t = (next > low) && (next < high) ? next : (low + high) / 2;}
+return t;
+}
+function curveArcIntegral(c, start, end) {
+var nodes = [0.1127016653792583, 0.5, 0.8872983346207417];
+var weights = [0.2777777777777778, 0.4444444444444444, 0.2777777777777778];
+var sum = 0;
+for (var i = 0; i < 3; i += 1) { 
+var v = getBezierDerivative(c[0], c[1], c[2], c[3], start + ((end - start) * nodes[i]));
+sum += (weights[i] * Math.sqrt((v[0] * v[0]) + (v[1] * v[1])));}
+return sum * (end - start);
+}
+function getPathLUT(shape) {
+var segments = [];
+var vP = [];
+var total = 0;
+var count = shape.closed ? shape.vertices.length : shape.vertices.length - 1;
+for (var i = 0; i < count; i += 1) { 
+var segment = getCurveLUT(getSegment(shape, i));
+vP.push(total);
+segment.start = total;
+total += segment.length;
+segments.push(segment);}
+for (var j = 0; j < vP.length; j += 1) { 
+vP[j] = total > 0 ? vP[j] / total : 0;}
+if (!shape.closed) { 
+vP.push(1);
+}
+return {segments: segments, shape: shape, totalDist: total, vP: vP};
+}
+function pointAtArc(data, p) {
+if ((!data.segments.length) || (data.totalDist === 0)) { 
+return data.shape.vertices[0];
+}
+if (data.shape.closed) { 
+p = p - Math.floor(p);
+}
+else {
+p = Math.max(0, Math.min(1, p));
+}
+var lo = 0;
+var hi = data.segments.length;
+while ((hi - lo) > 1) {
+var mid = Math.floor((lo + hi) / 2);
+if (data.vP[mid] <= p) { 
+lo = mid;
+}
+else {
+hi = mid;
+}
+}
+var s = data.segments[lo];
+var end = (lo + 1) < data.vP.length ? data.vP[lo + 1] : 1;
+var t = arcParameter(s, end > data.vP[lo] ? (p - data.vP[lo]) / (end - data.vP[lo]) : 0);
+return getBezierPoint(s.curve[0], s.curve[1], s.curve[2], s.curve[3], t);
+}
+function subdividePathToVertexCount(shape, target) {
+var result = cloneShape(shape);
+if (result.vertices.length >= target) { 
+return result;
+}
+var data = getPathLUT(result);
+var segments = data.segments;
+if (!segments.length) { 
+var v = result.vertices;
+var ins = result.inTangents;
+var outs = result.outTangents;
+ins[0] = [0, 0];
+outs[0] = [0, 0];
+while (v.length < target) {
+v.push(v[0].slice());
+ins.push([0, 0]);
+outs.push([0, 0]);
+}
+result.vertices = v;
+result.inTangents = ins;
+result.outTangents = outs;
+return result;
+}
+while (result.vertices.length < target) {
+var best = 0;
+for (var i = 1; i < segments.length; i += 1) { 
+if (segments[i].length > segments[best].length) { 
+best = i;
+}}
+var t = arcParameter(segments[best], 0.5);
+result = splitShapeSegment(result, best, t);
+var halves = splitCurve(segments[best].curve, t);
+segments.splice(best, 1, getCurveLUT(halves[0]), getCurveLUT(halves[1]));
+}
+return result;
+}
+function resampleAtPercentages(shape, data, percentages) {
+var v = [];
+var ins = [];
+var outs = [];
+var cursor = 0;
+for (var i = 0; i < data.segments.length; i += 1) { 
+var segment = data.segments[i];
+var start = data.vP[i];
+var end = (i + 1) < data.vP.length ? data.vP[i + 1] : 1;
+var remaining = segment.curve;
+var previousT = 0;
+while ((cursor < percentages.length) && (percentages[cursor] <= start)) {
+cursor++;
+}
+while (true) {
+var boundary = cursor < percentages.length ? percentages[cursor] : 1;
+var atEnd = boundary >= end;
+var t = atEnd ? 1 : arcParameter(segment, (boundary - start) / (end - start));
+var pieces = splitCurve(remaining, previousT < 1 ? (t - previousT) / (1 - previousT) : 0);
+var piece = atEnd ? remaining : pieces[0];
+v.push(piece[0]);
+outs.push(subtractPoints(piece[1], piece[0]));
+ins.push(subtractPoints(piece[2], piece[3]));
+if (atEnd) { 
+break ;
+}
+remaining = pieces[1];
+previousT = t;
+cursor++;
+}}
+if (shape.closed) { 
+ins.unshift(ins.pop());
+}
+else {
+v.push(shape.vertices[shape.vertices.length - 1].slice());
+ins.unshift(shape.inTangents[0].slice());
+outs.push(shape.outTangents[shape.outTangents.length - 1].slice());
+}
+var result = new Shape();
+result.vertices = v;
+result.inTangents = ins;
+result.outTangents = outs;
+result.closed = shape.closed;
+return result;
+}
+function normalizePoints(points) {
+var center = [0, 0];
+var sum = 0;
+var result = [];
+for (var i = 0; i < points.length; i += 1) { 
+center[0] += points[i][0];
+center[1] += points[i][1];}
+center[0] /= points.length;
+center[1] /= points.length;
+for (var i = 0; i < points.length; i += 1) { 
+sum += sqDist(points[i], center);}
+var scale = Math.sqrt(sum / points.length);
+if (scale < 1e-09) { 
+scale = 1;
+}
+for (var i = 0; i < points.length; i += 1) { 
+result.push([(points[i][0] - center[0]) / scale, (points[i][1] - center[1]) / scale]);}
+return result;
+}
+function contourSamples(data, offset, count) {
+var points = [];
+var denominator = data.shape.closed ? count : count - 1;
+for (var i = 0; i < count; i += 1) { 
+points.push(pointAtArc(data, offset + (i / denominator)));}
+return normalizePoints(points);
+}
+function sampleCost(a, b) {
+var sum = 0;
+for (var i = 0; i < a.length; i += 1) { 
+sum += sqDist(a[i], b[i]);}
+return sum / a.length;
+}
+function contourAlignment(reference, candidate) {
+var a = getPathLUT(reference);
+var b = getPathLUT(candidate);
+var samples = contourSamples(a, 0, 48);
+var bestCost = Infinity;
+var bestOffset = 0;
+var count = candidate.closed ? candidate.vertices.length : 1;
+for (var offset = 0; offset < count; offset += 1) { 
+var cost = sampleCost(samples, contourSamples(b, (b.vP[offset]) || (0), 48));
+if (cost < (bestCost - 1e-09)) { 
+bestCost = cost;
+bestOffset = offset;
+}}
+return {cost: bestCost, offset: bestOffset};
+}
+function alignContourStart(reference, candidate) {
+return reorderShape(candidate, contourAlignment(reference, candidate).offset, false);
+}
+function getCurveArea(shape) {
+var nodes = [0.1127016653792583, 0.5, 0.8872983346207417];
+var weights = [0.2777777777777778, 0.4444444444444444, 0.2777777777777778];
+var area = 0;
+var origin = shape.vertices[0];
+for (var i = 0; i < shape.vertices.length; i += 1) { 
+var c = getSegment(shape, i);
+for (var p = 0; p < 4; p += 1) { 
+c[p] = subtractPoints(c[p], origin);}
+for (var j = 0; j < 3; j += 1) { 
+var pt = getBezierPoint(c[0], c[1], c[2], c[3], nodes[j]);
+var d = getBezierDerivative(c[0], c[1], c[2], c[3], nodes[j]);
+area += ((weights[j] * ((pt[0] * d[1]) - (pt[1] * d[0]))) / 2);}}
+return area;
+}
+function matchPathDirection(reference, candidate) {
+var reverse = reorderShape(candidate, candidate.closed ? 0 : candidate.vertices.length - 1, true);
+if ((reference.closed) && (candidate.closed)) { 
+var areaA = getCurveArea(reference);
+var areaB = getCurveArea(candidate);
+var lengthA = getPathLUT(reference).totalDist;
+var lengthB = getPathLUT(candidate).totalDist;
+if ((Math.abs(areaA) > (lengthA * lengthA * 1e-10)) && (Math.abs(areaB) > (lengthB * lengthB * 1e-10))) { 
+return (areaA * areaB) < 0 ? reverse : cloneShape(candidate);
+}
+}
+var normalCost = contourAlignment(reference, candidate).cost;
+var reverseCost = contourAlignment(reference, reverse).cost;
+return reverseCost < (normalCost - 1e-09) ? reverse : cloneShape(candidate);
+}
+function indexedCurveSamples(shape) {
+var points = [];
+for (var i = 0; i < shape.vertices.length; i += 1) { 
+var c = getSegment(shape, i);
+points.push(c[0]);
+points.push(getBezierPoint(c[0], c[1], c[2], c[3], 0.3333333333333333));
+points.push(getBezierPoint(c[0], c[1], c[2], c[3], 0.6666666666666666));}
+return normalizePoints(points);
+}
+function shiftToAlign(reference, candidate) {
+function score(offset, step) {
+var sum = 0;
+var count = 0;
+for (var i = 0; i < n; i += step) { 
+for (var j = 0; j < 3; j += 1) { 
+sum += sqDist(a[(i * 3) + j], b[(((i + offset) % n) * 3) + j]);}
+count += 3;}
+return sum / count;
+}
+if ((!reference.closed) || (!candidate.closed)) { 
+return candidate;
+}
+var a = indexedCurveSamples(reference);
+var b = indexedCurveSamples(candidate);
+var n = reference.vertices.length;
+var bestOffset = 0;
+var bestCost = Infinity;
+var shortlist = [];
+var stride = n <= 128 ? 1 : Math.ceil(n / 32);
+for (var offset = 0; offset < n; offset += 1) { 
+shortlist.push({cost: score(offset, stride), offset: offset});
+shortlist.sort(function (x, y) {
+return x.cost === y.cost ? x.offset - y.offset : x.cost - y.cost;
+});
+if (shortlist.length > 8) { 
+shortlist.pop();
+}}
+shortlist.push({cost: 0, offset: 0});
+bestCost = score(0, 1);
+for (var k = 0; k < shortlist.length; k += 1) { 
+var full = score(shortlist[k].offset, 1);
+if (full < (bestCost - 1e-09)) { 
+bestCost = full;
+bestOffset = shortlist[k].offset;
+}}
+return reorderShape(candidate, bestOffset, false);
+}
+function getBezierPoint(p0, p1, p2, p3, t) {
+var u = 1 - t;
+return [(u * u * u * p0[0]) + (3 * u * u * t * p1[0]) + (3 * u * t * t * p2[0]) + (t * t * t * p3[0]), (u * u * u * p0[1]) + (3 * u * u * t * p1[1]) + (3 * u * t * t * p2[1]) + (t * t * t * p3[1])];
+}
+function getBezierDerivative(p0, p1, p2, p3, t) {
+var u = 1 - t;
+return [(3 * u * u * (p1[0] - p0[0])) + (6 * u * t * (p2[0] - p1[0])) + (3 * t * t * (p3[0] - p2[0])), (3 * u * u * (p1[1] - p0[1])) + (6 * u * t * (p2[1] - p1[1])) + (3 * t * t * (p3[1] - p2[1]))];
+}
+var mm_settings = {helpText: "MagicMorphing\n\nSelect at least two Path keyframes and click MAGIC. Default mode keeps point counts low. Enable Complex Path for denser feature matching; it can add more points. Both modes preserve the outlines and existing timing.\n\nUndo restores the path values from before the last MAGIC run. Up to 20 runs are remembered while this panel stays open. Repeated Undo returns through earlier runs. Edited, moved or deleted keys are checked before restoring.\n\nReordering can affect Trim Paths and dashed strokes. Feathered masks are skipped.\n\nMade by: aref_nashawi\n\n\xa9 2026 Aref Nashawi. All Rights Reserved. Unauthorized reproduction or resale is strictly prohibited.", scriptAuthor: "Aref Nashawi", scriptName: "MagicMorphing", scriptURL: "https://aescripts.com/magicmorphing", scriptVersion: "1.1.0"};
+var trialMode = true;
+var lastSequence = 0;
+var undoHistory = [];
+var undoButton = null;
+return {invoke: function (action, complex, key, sequence, issuedAt, trial) {
+try {
+if ((action === "initialize") || (action === "state")) { 
+return result(true, "");
+}
+if (((((((((key !== "c971b70fa7f9ab1726fa3fa645ebcefd09a5be11ba9f085e8f2f0aafa3bde29a") || (typeof sequence !== "number")) || (!isFinite(sequence))) || (sequence !== Math.floor(sequence))) || (sequence <= lastSequence)) || (typeof issuedAt !== "number")) || (!isFinite(issuedAt))) || (Math.abs(new Date().getTime() - issuedAt) > 30000)) || (typeof trial !== "boolean")) { 
+throw new Error("License authorization is missing or expired. Reopen MagicMorphing.");
+}
+lastSequence = sequence;
+trialMode = trial;
+if (action === "magic") { 
+processMagicFix(complex === true);
+}
+else if (action === "undo") {
+undoMagicFix();
+}
+else {
+throw new Error("Unknown action");
+}
+return result(true, "");
+} catch (error) {return result(false, error.toString());
+}
+}};
+})();
